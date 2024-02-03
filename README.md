@@ -1,3 +1,21 @@
+# Stoic-Jobs
+
+This is still being completely re-worked. 
+Note issues can be reported too 
+
+https://discord.gg/jvC9uMDD82
+
+
+
+
+
+
+
+
+
+
+
+# Orginal Post from Lama1
 # ND_Jobs
 ![NDJobs](https://user-images.githubusercontent.com/79053058/196249682-5a585dc0-a91a-4f3d-98b1-334e09ddf270.png)
 
