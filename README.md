@@ -19,7 +19,7 @@ https://discord.gg/jvC9uMDD82
 
 ## Ownership/Authorship receipts
 
-https://cdn.discordapp.com/attachments/982855421779922944/1203489072203440148/image.png?ex=65d1478a&is=65bed28a&hm=7c6b9eaf9fb560736b064723e46feb7dbae0050a615020f885d5b50bf096e7a3&
+![NDJobs](https://cdn.discordapp.com/attachments/982855421779922944/1203489072203440148/image.png?ex=65d1478a&is=65bed28a&hm=7c6b9eaf9fb560736b064723e46feb7dbae0050a615020f885d5b50bf096e7a3&)
 
 # ND_Jobs
 ![NDJobs](https://user-images.githubusercontent.com/79053058/196249682-5a585dc0-a91a-4f3d-98b1-334e09ddf270.png)
