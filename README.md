@@ -1,3 +1,6 @@
+# For Andy from NDFrammework
+# I did not make, I do not claim rights and it's Open Source.
+
 # Stoic-Jobs
 
 This is still being completely re-worked. 
