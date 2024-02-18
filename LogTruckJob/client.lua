@@ -34,7 +34,11 @@ CreateThread(function()
                 DisplayHelpTextThisFrame("press_start_job")
                 if IsControlPressed(1, 38) then
                     if IsPedSittingInAnyVehicle(player) then
-                        DisplayNotification("~r~You can't start the job while you're in a vehicle.")
+                        DisplayNotification({
+                            title = "Error",
+                            description = "You can't start the job while you're in a vehicle.",
+                            type = 'error'
+                        })
                     else
                         SpawnVehicle(Config.TruckModel, Config.DepotLocation)
                         SetPedIntoVehicle(player, vehicle, -1)
@@ -70,12 +74,22 @@ function StartJob()
     if trailer then 
         DeleteVehicle(trailer)
     end
-    trailer = SpawnTrailer(model, location)
-    DisplayNotification("~b~New task: ~w~pick up the trailer at the marked location.")
+    trailer = SpawnLOGTrailer(model, location)
+    DisplayNotification({
+        title = "New task",
+        description = "Pick up the trailer at the marked location.",
+        type = 'inform'
+    })
     if Config.UseND then 
-        DisplayNotification("Long press ~r~SHIFT~w~ + ~r~X~w~ at any time to force-cancel the job and pay a penalty.")
+        DisplayNotification({
+            description = "Long press [SHIFT] + [X] at any time to force-cancel the job and pay a penalty.",
+            type = 'inform'
+        })
     else
-        DisplayNotification("Long Press ~r~SHIFT~w~ + ~r~X~w~ at any time to force-cancel the job.")
+        DisplayNotification({
+            description = "Long Press [SHIFT] + [X] at any time to force-cancel the job.",
+            type = 'inform'
+        })
     end
     while true do
         opti = 2
@@ -101,14 +115,18 @@ end
 
 -- drive to the location and deliver the trailer
 function DeliverTrailer()
-    AddTextEntry("press_detach_trailer", "Long press ~INPUT_VEH_HEADLIGHT~ to detach the trailer")
+    AddTextEntry("press_detach_trailer", "Long press [H] to detach the trailer")
     local location = math.randomchoice(Config.Destinations)
     local blip = AddBlipForCoord(location.x, location.y, location.z)
     SetBlipSprite(blip, 478)
     SetBlipColour(blip, 56)
     SetBlipRoute(blip, true)
     SetBlipRouteColour(blip, 56)
-    DisplayNotification("~b~New task: ~w~deliver the trailer at the marked location.")
+    DisplayNotification({
+        title = "New task",
+        description = "Deliver the trailer at the marked location.",
+        type = 'inform'
+    })
     while true do
         opti = 2
         -- check if forcequit 
@@ -137,7 +155,14 @@ function NewChoice(location)
     amount = amount + Config.PayPerDelivery
     -- tell server we delivered something and where
     TriggerServerEvent("lama_jobs:delivered", location)
-    DisplayNotification("Press ~b~E~w~ to accept another job.\nPress ~r~X~w~ to end your shift.")
+    DisplayNotification({
+        description = "Press [E] to accept another job.",
+        type = 'inform'
+    })
+    DisplayNotification({
+        description = "Press [X] to end your shift.",
+        type = 'inform'
+    })
     while true do
         Wait(0)
         if IsControlPressed(1, 38) then
@@ -159,9 +184,17 @@ function EndJob()
     SetBlipRoute(blip, true)
     SetBlipRouteColour(blip, 56)
     if Config.UseND then 
-        DisplayNotification("~b~New task: ~w~return the truck to the depot to get paid.")
+        DisplayNotification({
+            title = "New task",
+            description = "Return the truck to the depot to get paid.",
+            type = 'inform'
+        })
     else 
-        DisplayNotification("~b~New task: ~w~return the truck to the depot.")
+        DisplayNotification({
+            title = "New task",
+            description = "Return the truck to the depot.",
+            type = 'inform'
+        })
     end
     jobStarted = false
     while true do
@@ -180,11 +213,17 @@ function EndJob()
                 if Config.UseND then
                     -- tell server ve've finished the job and need to pay us
                     TriggerServerEvent("lama_jobs:finished")
-                    DisplayNotification("You've received ~g~$" .. amount .. " ~w~for completing the job.")
+                    DisplayNotification({
+                        description = "You've received $" .. amount .. " for completing the job.",
+                        type = 'success'
+                    })
                     amount = 0
                     break
                 else
-                    DisplayNotification("~g~You've successfully completed the job.")
+                    DisplayNotification({
+                        description = "You've successfully completed the job.",
+                        type = 'success'
+                    })
                     break
                 end
             end
@@ -201,9 +240,15 @@ function ForceQuit()
     RemoveBlip(blip)
     if Config.UseND then
         TriggerServerEvent("lama_jobs:forcequit")
-        DisplayNotification("You've been fined ~r~$" .. Config.Penalty .. " ~w~for cancelling the job.")
+        DisplayNotification({
+            description = "You've been fined $" .. Config.Penalty .. " for cancelling the job.",
+            type = 'error'
+        })
     else
-        DisplayNotification("~r~You've cancelled the job.")
+        DisplayNotification({
+            description = "You've cancelled the job.",
+            type = 'error'
+        })
     end
     amount = 0
 end
@@ -221,7 +266,7 @@ function SpawnVehicle(model, location)
 end
 
 -- function to trailer vehicle at desired location
-function SpawnTrailer(model, location)
+function SpawnLOGTrailer(model, location)
     RequestModel(model)
     while not HasModelLoaded(model) do
         Wait(500)
@@ -242,9 +287,27 @@ function math.randomchoice(table)
     return table[index]
 end
 
--- function to display the notification above minimap
-function DisplayNotification(text)
-    SetNotificationTextEntry("STRING")
-    AddTextComponentString(text)
-    DrawNotification(false, false)
+function DisplayNotification(data)
+    if not data.title and not data.description then
+        return  -- If neither title nor description is provided, do nothing
+    end
+
+    local notificationData = {
+        title = data.title,
+        description = data.description,
+        duration = data.duration or 5000,
+        position = data.position or 'top-right',
+        type = data.type or 'inform',
+        style = data.style or {},
+        icon = data.icon,
+        iconColor = data.iconColor,
+        iconAnimation = data.iconAnimation,
+        alignIcon = data.alignIcon or 'center'
+    }
+
+    if data.id then
+        lib.notify(data.id, notificationData)
+    else
+        lib.notify(notificationData)
+    end
 end
