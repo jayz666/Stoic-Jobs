@@ -14,7 +14,7 @@ Config.PayPerDelivery = 750
 Config.Penalty = 250
 
 -- Set the truck model name used for the job
-Config.TruckModel = 'W900'
+Config.TruckModel = 'phantom'
 
 -- Set the location of the blip on the map where the player can start the job
 Config.BlipLocation = { x = -552.17, y = 5348.65,  z = 74.74,  h = 62.36 }
