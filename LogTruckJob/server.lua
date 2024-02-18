@@ -43,7 +43,7 @@ RegisterNetEvent("lama_jobs:finished", function()
 			-- if using another framework than ND, simply change the function below to your framework's
             deliveries[src] = 0
             playersOnJob[src] = false
-			player.addMoney("bank", amount, "Trucking Payment")
+			player.addMoney("cash", amount, "Trucking Payment")
 		else
 			print(string.format("^1Possible exploiter detected\nName: ^0%s\n^1Identifier: ^0%s\n^1Reason: ^0has somehow requested to be paid without being near the job ending location", GetPlayerName(source), GetPlayerIdentifier(source, 0)))
 		end	
@@ -54,7 +54,7 @@ RegisterNetEvent("lama_jobs:forcequit", function()
     local src = source
     local penalty = Config.Penalty
     local player = NDCore.getPlayer(src)
-    player.deductMoney("bank", penalty, "Force Quit Trucking Job")
+    player.deductMoney("cash", penalty, "Force Quit Trucking Job")
 end)
 
 -- version checker
