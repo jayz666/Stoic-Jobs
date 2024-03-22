@@ -1,54 +1,23 @@
---[[
-Created by Lama Development
-For support - https://discord.gg/etkAKTw3M7
-Do not edit below if you don't know what you are doing
-]] --
-
 -- Variables, do not touch
 local isInJob = false
 local JobStarted = false
 local garbagePay = 0
 local garbageTruck = nil
 local waypointBlip = nil
+
 -- Declare garbage can models
 local garbageCanModels = {
     "prop_rub_binbag_sd_01",
     "prop_cs_bin_03",
-    "prop_cs_bin_01_skinned",
-    "prop_cs_bin_02",
-    "prop_cs_bin_01",
-    "prop_ld_rub_binbag_01",
-    "prop_rub_binbag_sd_02",
-    "prop_ld_binbag_01",
-    "prop_cs_rub_binbag_01",
-    "prop_bin_07b",
-    "prop_bin_01a",
-    "prop_recyclebin_05_a",
-    "prop_recyclebin_02_c",
-    "prop_recyclebin_03_a",
-    "zprop_bin_01a_old",
-    "prop_bin_07c",
-    "prop_bin_14a",
-    "prop_bin_02a",
-    "prop_bin_08a",
-    "prop_bin_08open",
-    "prop_bin_14b",
-    "prop_cs_dumpster_01a",
-    "p_dumpster_t",
-    "prop_dumpster_3a",
-    "prop_dumpster_4b",
-    "prop_dumpster_4a",
-    "prop_dumpster_01a",
-    "prop_dumpster_02b",
-    "prop_dumpster_02a"
+    -- Add more garbage can models as needed
 }
 
 local garbageCanOptions = {
-    label = "Pick up trash",  -- Label for the option
-    distance = 5,              -- Max distance to display the option
-    onSelect = function(data)  -- Function to execute when the option is selected
+    label = "Search bin bag",   -- Updated label for the option
+    distance = 5,               -- Max distance to display the option
+    onSelect = function(data)   -- Function to execute when the option is selected
         if isInJob then
-            PayForTrash()          -- Pay the player for picking up trash
+            SearchBinBag(data.entity) -- Call function to search bin bag
         end
     end
 }
@@ -58,18 +27,75 @@ for _, model in ipairs(garbageCanModels) do
     exports.ox_target:addModel(model, garbageCanOptions)
 end
 
--- Function to pay the player for picking up trash
-function PayForTrash()
-    if isInJob then
-        local randomPayment = math.random(Config.MinRandomPayment, Config.MaxRandomPayment)
-        garbagePay = garbagePay + randomPayment
-        drawnotifcolor("You've earned $" .. randomPayment .. " for picking up trash.", 140)
-        TriggerServerEvent("TrashCollector:GiveReward", randomPayment)
-        print("Random payment: $" .. randomPayment)
+-- Function to search bin bag
+function SearchBinBag(binBagEntity)
+    -- Generate a random number of items found in the bin bag (between 0 and 3)
+    local numItems = math.random(0, 3)
+    
+    if numItems > 0 then
+        -- Notify the player about found items
+        drawnotifcolor("You found " .. numItems .. " item(s) in the bin bag:", 140)
+        for i = 1, numItems do
+            -- Generate random item or resource
+            local item = GenerateRandomItem()
+            drawnotifcolor("- " .. item, 140)
+        end
     else
-        drawnotifcolor("You must be in a job to pick up trash.", 140)
+        -- Notify the player that no items were found
+        drawnotifcolor("You didn't find anything in the bin bag.", 140)
     end
+    
+    -- Determine if the player gets hurt while searching
+    if math.random() < 0.1 then -- 10% chance of getting hurt
+        drawnotifcolor("Ouch! You got hurt while searching the bin bag.", 255) 
+        -- Add logic here to apply damage to the player
+        -- Example: ApplyDamageToPlayer()
+    end
+    
+    -- Destroy the bin bag entity after searching
+    DeleteEntity(binBagEntity)
 end
+
+-- Function to generate a random item
+function GenerateRandomItem()
+    -- Add logic here to generate random items
+    local items = {
+        "Trash",
+        "Empty can",
+        "Useful item",
+        -- Add more items as needed
+    }
+    local randomIndex = math.random(1, #items)
+    return items[randomIndex]
+end
+
+-- Draw notification above the minimap
+function drawnotifcolor(text, color)
+    Citizen.InvokeNative(0x92F0DA1E27DB96DC, tonumber(color))
+    SetNotificationTextEntry("STRING")
+    AddTextComponentString(text)
+    DrawNotification(false, true)
+end
+
+-- Draw marker and check when to start the job
+Citizen.CreateThread(function()
+    -- Add your code here to draw markers and check when to start the job
+    AddTextEntry("press_start_job", "Press ~INPUT_CONTEXT~ to start your shift")
+    while true do
+        Citizen.Wait(1)
+        local ped = GetPlayerPed(-1)
+        local coords = GetEntityCoords(ped)
+        local distance = GetDistanceBetweenCoords(vector3(-343.36, 7114.91, 6.43), coords, true)
+        DrawMarker(1, -343.36, 7114.91, 4.73, 0, 0, 0, 0, 0, 0, 2.001, 2.0001, 1.5001, 50, 205, 50, 75, 0, 1, 0, 0)
+
+        if distance <= 2 then
+            DisplayHelpTextThisFrame("press_start_job")
+            if IsControlPressed(1, 38) then
+                StartGarbageJob()
+            end
+        end
+    end
+end)
 
 -- Function for starting the garbage collection job
 function StartGarbageJob()
@@ -138,77 +164,5 @@ function StopService()
         drawnotifcolor("Drive the truck back to its spawn location to end the job.", 140)
     end
 
-    -- If the truck is far from the spawn location, set a waypoint to it
-    if truckDistance > 100 then
-        -- Remove the waypoint blip
-        if waypointBlip ~= nil then
-            RemoveBlip(waypointBlip)
-            waypointBlip = nil
-        end
-    elseif waypointBlip == nil then
-        -- Add waypoint blip if it doesn't exist
-        waypointBlip = AddBlipForCoord(spawnCoords.x, spawnCoords.y, spawnCoords.z)
-        SetBlipSprite(waypointBlip, 1)
-        SetBlipColour(waypointBlip, 2)
-        BeginTextCommandSetBlipName("STRING")
-        AddTextComponentString("Truck Spawn")
-        EndTextCommandSetBlipName(waypointBlip)
-    end
-end
+    -- If the truck is far from the spawn location, set a waypoint
 
-
-
--- Draw marker and check when to start the job
-Citizen.CreateThread(function()
-    -- Add your code here to draw markers and check when to start the job
-    AddTextEntry("press_start_job", "Press ~INPUT_CONTEXT~ to start your shift")
-    while true do
-        Citizen.Wait(1)
-        local ped = GetPlayerPed(-1)
-        local coords = GetEntityCoords(ped)
-        local distance = GetDistanceBetweenCoords(vector3(-343.36, 7114.91, 6.43), coords, true)
-        DrawMarker(1, -343.36, 7114.91, 4.73, 0, 0, 0, 0, 0, 0, 2.001, 2.0001, 1.5001, 50, 205, 50, 75, 0, 1, 0, 0)
-
-        if distance <= 2 then
-            DisplayHelpTextThisFrame("press_start_job")
-            if IsControlPressed(1, 38) then
-                StartGarbageJob()
-            end
-        end
-    end
-end)
-
--- Function to continuously check if the player is in the return spot
-Citizen.CreateThread(function()
-    while true do
-        Citizen.Wait(1000) -- Adjust the interval as needed
-        if not isInJob then
-            -- If the player is not in a job, there's no need to check
-            return
-        end
-
-        local spawnCoords = vector3(Config.TrashTruckSpawn.x, Config.TrashTruckSpawn.y, Config.TrashTruckSpawn.z)
-        local truckCoords = GetEntityCoords(garbageTruck)
-        local truckDistance = Vdist(truckCoords.x, truckCoords.y, truckCoords.z, spawnCoords.x, spawnCoords.y, spawnCoords.z)
-
-        if truckDistance < 5 then
-            -- If the truck is near the spawn location, check if the player wants to delete it
-            drawnotifcolor("Press ~g~E~w~ to delete the vehicle.", 140)
-            if IsControlJustPressed(1, 38) then
-                -- If the player presses E, delete the vehicle
-                DeleteEntity(garbageTruck)
-                drawnotifcolor("Vehicle deleted.", 25)
-                return
-            end
-        end
-    end
-end)
-
-
--- Draw notification above the minimap
-function drawnotifcolor(text, color)
-    Citizen.InvokeNative(0x92F0DA1E27DB96DC, tonumber(color))
-    SetNotificationTextEntry("STRING")
-    AddTextComponentString(text)
-    DrawNotification(false, true)
-end
